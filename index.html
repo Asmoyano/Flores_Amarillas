@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Jardín de Flores Amarillas 🌻💛</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        garden: {
+                            bg: '#F5F2E7',
+                            soilLight: '#6D4C41',
+                            soilDark: '#3E2723',
+                            grass: '#66BB6A',
+                            accent: '#FBC02D'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Nunito', 'sans-serif'],
+                        cursive: ['"Dancing Script"', 'cursive']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            touch-action: manipulation;
+            -webkit-tap-highlight-color: transparent;
+            background-color: #F5F2E7;
+            user-select: none;
+        }
+
+        /* Natural Organic Garden Bed Styling */
+        .organic-soil-patch {
+            background: radial-gradient(circle at 50% 40%, #487948 0%, #375d3b 60%, #233e26 100%);
+            border-radius: 42% 58% 48% 52% / 35% 45% 55% 65%;
+            box-shadow: inset 0 8px 15px rgba(0,0,0,0.5), 0 10px 25px rgba(62,39,35,0.3);
+            position: relative;
+        }
+
+        .fade-step {
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-out;
+        }
+
+        /* Particles */
+        .particle {
+            position: absolute;
+            pointer-events: none;
+            animation: particleFly 1s forwards ease-out;
+            z-index: 50;
+        }
+
+        @keyframes particleFly {
+            0% { opacity: 1; transform: translate(0, 0) scale(1); }
+            100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.3); }
+        }
+
+        /* Floating Petals Animation */
+        .falling-petal {
+            position: fixed;
+            top: -20px;
+            pointer-events: none;
+            z-index: 100;
+            animation: floatPetal 8s linear infinite;
+        }
+
+        @keyframes floatPetal {
+            0% { transform: translateY(0) rotate(0deg) translateX(0); opacity: 0.9; }
+            50% { transform: translateY(50vh) rotate(180deg) translateX(25px); opacity: 0.8; }
+            100% { transform: translateY(105vh) rotate(360deg) translateX(-15px); opacity: 0; }
+        }
+
+        /* Pulse highlight for active plot tool */
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(251, 192, 45, 0.7); }
+            50% { box-shadow: 0 0 0 10px rgba(251, 192, 45, 0); }
+        }
+        .active-tool {
+            animation: pulseGlow 1.8s infinite;
+        }
+
+        /* Cooldown visual progress overlay */
+        .cooldown-overlay {
+            transition: height 0.1s linear;
+        }
+
+        /* Custom Scrollbar for Garden Field */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #EFEBE0;
+            border-radius: 10px;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #D4E157;
+            border-radius: 10px;
+        }
+    </style>
+</head>
+<body class="min-h-screen text-gray-800 flex flex-col justify-between items-center overflow-x-hidden font-sans">
+
+    <!-- INTRO SCREEN -->
+    <div id="intro-screen" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-amber-50/95 backdrop-blur-sm">
+        <div class="bg-white rounded-3xl p-6 sm:p-8 max-w-sm w-full text-center shadow-2xl border-4 border-yellow-300 relative overflow-hidden">
+            <div class="text-6xl mb-4 animate-bounce">🌻💛</div>
+            <h1 class="text-2xl font-bold text-amber-900 mb-2">¡Hola, mi dulce princesa!</h1>
+            <p class="text-gray-600 text-sm mb-6 leading-relaxed">
+                Hoy en el <span class="font-bold text-amber-600">Día de las Flores Amarillas</span>, tengo un jardín secreto que cultivar solo para ti. ¿Me ayudas a hacerlo florecer? ✨
+            </p>
+
+            <div class="flex flex-col gap-4 items-center justify-center min-h-[140px]" id="intro-btn-container">
+                <button id="btn-yes" class="w-full bg-amber-400 hover:bg-amber-500 text-amber-950 font-extrabold py-3.5 px-6 rounded-2xl shadow-lg transition-all transform active:scale-95 text-lg border-b-4 border-amber-600">
+                    ¡Sí, claro que sí! 💕
+                </button>
+                <button id="btn-no" class="bg-rose-400 hover:bg-rose-500 text-white font-bold py-2.5 px-5 rounded-xl shadow transition-all text-sm">
+                    No 🙈
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <main class="w-full max-w-md mx-auto min-h-screen flex flex-col justify-between p-3 sm:p-4">
+        
+        <!-- Top Status Bar -->
+        <header class="bg-white/80 backdrop-blur rounded-2xl p-3 shadow-sm border border-amber-200/60 mb-2 sticky top-2 z-30">
+            <div class="flex justify-between items-center mb-1.5">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl">🌷</span>
+                    <div>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-amber-800">Progreso del Jardín</h2>
+                        <span id="progress-text" class="text-sm font-extrabold text-gray-800">0 / 23 Florecidos</span>
+                    </div>
+                </div>
+                <button id="btn-sound-toggle" class="p-2 rounded-xl bg-amber-100 text-amber-800 hover:bg-amber-200 text-xs font-bold flex items-center gap-1">
+                    <span id="sound-icon">🔊</span>
+                </button>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="w-full bg-amber-100 rounded-full h-3.5 p-0.5 overflow-hidden border border-amber-200">
+                <div id="progress-bar" class="bg-gradient-to-r from-amber-400 to-yellow-500 h-full rounded-full transition-all duration-500 w-0 shadow-inner"></div>
+            </div>
+        </header>
+
+        <!-- Natural Organic Garden Container -->
+        <section class="flex-1 bg-emerald-900/10 rounded-3xl p-3 border-4 border-emerald-800/20 shadow-inner mb-2 relative overflow-hidden flex flex-col justify-center items-center">
+            <div class="text-center text-xs font-bold text-emerald-900/80 mb-2 flex items-center justify-center gap-1 z-10 bg-white/70 backdrop-blur px-3 py-1 rounded-full border border-emerald-200">
+                <span>🌱 Toca una herramienta y luego selecciona una maceta orgánica</span>
+            </div>
+
+            <!-- Organic Soil Bed Field -->
+            <div class="w-full flex-1 min-h-[380px] max-h-[58vh] overflow-y-auto custom-scroll p-2 relative flex items-center justify-center">
+                <div id="organic-soil-patch" class="organic-soil-patch w-full min-h-[520px] p-4 relative my-auto border-4 border-amber-950/40">
+                    
+                    <!-- Decorative Natural Grass Tufts & Stones -->
+                    <div class="absolute top-4 left-6 text-xl opacity-80 pointer-events-none">🌿</div>
+                    <div class="absolute top-12 right-8 text-sm opacity-70 pointer-events-none">🪨</div>
+                    <div class="absolute bottom-8 left-10 text-base opacity-70 pointer-events-none">🪨</div>
+                    <div class="absolute bottom-16 right-12 text-2xl opacity-80 pointer-events-none">🌿</div>
+                    <div class="absolute top-1/2 left-3 text-lg opacity-60 pointer-events-none">✨</div>
+                    <div class="absolute top-1/3 right-4 text-lg opacity-60 pointer-events-none">✨</div>
+
+                    <!-- 23 Organically Scattered Planting Spots Injected via JS -->
+                    <div id="garden-spots-container" class="relative w-full h-full min-h-[480px]"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Bottom Interactive Toolbar with 3s Cooldown Indicators -->
+        <footer class="bg-white rounded-2xl p-2.5 shadow-lg border border-amber-200/80 z-20">
+            <div class="grid grid-cols-3 gap-2">
+                
+                <!-- Tool: Plant -->
+                <button id="tool-plant" class="tool-btn relative overflow-hidden bg-amber-50 hover:bg-amber-100 border-2 border-amber-300 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
+                    <div id="cd-overlay-plant" class="cooldown-overlay absolute bottom-0 left-0 right-0 bg-amber-900/30 w-full h-0 pointer-events-none"></div>
+                    <span class="text-2xl z-10">🌰</span>
+                    <span id="tool-label-plant" class="text-xs font-bold text-amber-900 z-10">Sembrar</span>
+                </button>
+
+                <!-- Tool: Water -->
+                <button id="tool-water" class="tool-btn relative overflow-hidden bg-blue-50 hover:bg-blue-100 border-2 border-blue-200 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
+                    <div id="cd-overlay-water" class="cooldown-overlay absolute bottom-0 left-0 right-0 bg-blue-900/30 w-full h-0 pointer-events-none"></div>
+                    <span class="text-2xl z-10">💧</span>
+                    <span id="tool-label-water" class="text-xs font-bold text-blue-900 z-10">Regar</span>
+                </button>
+
+                <!-- Tool: Fertilize -->
+                <button id="tool-fertilize" class="tool-btn relative overflow-hidden bg-emerald-50 hover:bg-emerald-100 border-2 border-emerald-200 rounded-xl p-2.5 flex flex-col items-center gap-1 transition-all">
+                    <div id="cd-overlay-fertilize" class="cooldown-overlay absolute bottom-0 left-0 right-0 bg-emerald-900/30 w-full h-0 pointer-events-none"></div>
+                    <span class="text-2xl z-10">✨</span>
+                    <span id="tool-label-fertilize" class="text-xs font-bold text-emerald-900 z-10">Abonar</span>
+                </button>
+            </div>
+        </footer>
+
+    </main>
+
+    <!-- FINAL LETTER ENVELOPE MODAL -->
+    <div id="letter-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md hidden transition-opacity duration-500 opacity-0">
+        <div class="relative w-full max-w-sm">
+            
+            <div id="envelope" class="bg-amber-100 border-2 border-amber-300 rounded-2xl p-6 text-center shadow-2xl relative cursor-pointer transform hover:scale-105 transition-all">
+                <div id="envelope-closed-content">
+                    <div class="w-16 h-16 bg-amber-400 text-amber-950 rounded-full flex items-center justify-center text-3xl mx-auto mb-3 shadow-md border-2 border-white">
+                        💌
+                    </div>
+                    <h3 class="text-xl font-bold text-amber-900 mb-1">¡Jardín Completo! 🌻</h3>
+                    <p class="text-xs text-amber-800 font-semibold">Tienes una carta para leer</p>
+                </div>
+
+                <div id="letter-content" class="hidden text-left bg-amber-50/90 rounded-xl p-5 border border-amber-200 shadow-inner max-h-[75vh] overflow-y-auto custom-scroll">
+                    <div class="text-center mb-4">
+                        <span class="text-4xl">🌷🟨🌷</span>
+                        <h2 class="font-cursive text-3xl font-bold text-amber-800 mt-1">Para Mi Niña Hermosa</h2>
+                    </div>
+                    <div class="space-y-3 text-gray-700 text-sm leading-relaxed font-sans">
+                        <p>
+                            Hoy no solo han florecido <strong>23 tulipanes amarillos</strong> en este pequeño jardín... sino que cada uno de ellos representa el cómo tu le das luz y alegría a mi vida todos los días. 💛
+                        </p>
+                        <p>
+                            En este <em>Día de las Flores Amarillas</em>, quería regalarte un jardín que podamos cuidar juntos. Así como cuidamos cada brote, siguiendo pasito a pasito, prometo así que seguiremos cultivando momentos bonitos, sonrisas y mucho amor.
+                        </p>
+                        <p class="text-center font-bold text-amber-900 text-base pt-2">
+                            ¡Gracias por hacer mi mundo más brillante! 💕
+                        </p>
+                    </div>
+                    <div class="mt-6 text-center">
+                        <button id="btn-close-letter" class="bg-amber-400 hover:bg-amber-500 text-amber-950 font-bold py-2 px-6 rounded-full text-xs shadow-md border border-amber-600">
+                            Guardar en tu Corazón ❤️
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        // --- GAME CONSTANTS & STATE ---
+        const TOTAL_TULIPS = 23;
+        const COOLDOWN_TIME_MS = 3000; // 3 Seconds Cooldown
+
+        let selectedTool = null; // 'plant', 'water', 'fertilize'
+        let soundEnabled = true;
+
+        // Cooldown state per tool
+        const cooldowns = {
+            plant: { active: false, remaining: 0, timer: null },
+            water: { active: false, remaining: 0, timer: null },
+            fertilize: { active: false, remaining: 0, timer: null }
+        };
+
+        // Tulip Object Structure: { id, stage: 0..5, needs: 'water'|'fertilize'|'none', x, y }
+        const gardenState = [];
+
+        // Pre-calculated organic scattered coordinates (%) inside soil bed
+        const organicCoordinates = [
+            { x: 18, y: 12 }, { x: 50, y: 10 }, { x: 80, y: 14 },
+            { x: 32, y: 22 }, { x: 65, y: 24 },
+            { x: 12, y: 32 }, { x: 48, y: 34 }, { x: 84, y: 36 },
+            { x: 28, y: 45 }, { x: 68, y: 46 },
+            { x: 10, y: 56 }, { x: 46, y: 56 }, { x: 86, y: 58 },
+            { x: 26, y: 66 }, { x: 64, y: 68 },
+            { x: 14, y: 78 }, { x: 48, y: 78 }, { x: 82, y: 80 },
+            { x: 32, y: 88 }, { x: 66, y: 88 },
+            { x: 22, y: 96 }, { x: 50, y: 96 }, { x: 78, y: 96 }
+        ];
+
+        // Initialize 23 spots
+        organicCoordinates.forEach((coord, i) => {
+            gardenState.push({
+                id: i,
+                stage: 0,
+                needs: 'none',
+                x: coord.x,
+                y: coord.y
+            });
+        });
+
+        // --- WEB AUDIO API SYNTHESIZER ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(type) {
+            if (!soundEnabled) return;
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'plant') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(180, now);
+                osc.frequency.exponentialRampToValueAtTime(90, now + 0.15);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            } else if (type === 'water') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, now);
+                osc.frequency.exponentialRampToValueAtTime(800, now + 0.2);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            } else if (type === 'fertilize') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, now);
+                osc.frequency.setValueAtTime(659.25, now + 0.08);
+                osc.frequency.setValueAtTime(783.99, now + 0.16);
+                gain.gain.setValueAtTime(0.15, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'fanfare') {
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, idx) => {
+                    const o = audioCtx.createOscillator();
+                    const g = audioCtx.createGain();
+                    o.connect(g);
+                    g.connect(audioCtx.destination);
+                    o.type = 'triangle';
+                    o.frequency.setValueAtTime(freq, now + idx * 0.12);
+                    g.gain.setValueAtTime(0.2, now + idx * 0.12);
+                    g.gain.linearRampToValueAtTime(0.01, now + idx * 0.12 + 0.3);
+                    o.start(now + idx * 0.12);
+                    o.stop(now + idx * 0.12 + 0.3);
+                });
+            }
+        }
+
+        // --- COOLDOWN SYSTEM LOGIC ---
+        function triggerToolCooldown(toolKey) {
+            const toolData = cooldowns[toolKey];
+            if (toolData.active) return;
+
+            toolData.active = true;
+            toolData.remaining = COOLDOWN_TIME_MS;
+
+            const btn = toolBtns[toolKey];
+            const overlay = document.getElementById(`cd-overlay-${toolKey}`);
+            const label = document.getElementById(`tool-label-${toolKey}`);
+            const originalText = toolNames[toolKey];
+
+            btn.disabled = true;
+            btn.classList.add('opacity-60', 'cursor-not-allowed');
+
+            const intervalStep = 50;
+            toolData.timer = setInterval(() => {
+                toolData.remaining -= intervalStep;
+                const pct = (toolData.remaining / COOLDOWN_TIME_MS) * 100;
+                overlay.style.height = `${pct}%`;
+
+                const secondsLeft = (toolData.remaining / 1000).toFixed(1);
+                label.innerText = `${secondsLeft}s`;
+
+                if (toolData.remaining <= 0) {
+                    clearInterval(toolData.timer);
+                    toolData.active = false;
+                    overlay.style.height = '0%';
+                    label.innerText = originalText;
+                    btn.disabled = false;
+                    btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                }
+            }, intervalStep);
+        }
+
+        const toolNames = {
+            plant: 'Sembrar',
+            water: 'Regar',
+            fertilize: 'Abonar'
+        };
+
+        // --- DOM ELEMENTS ---
+        const btnYes = document.getElementById('btn-yes');
+        const btnNo = document.getElementById('btn-no');
+        const introScreen = document.getElementById('intro-screen');
+        const gardenSpotsContainer = document.getElementById('garden-spots-container');
+        const progressBar = document.getElementById('progress-bar');
+        const progressText = document.getElementById('progress-text');
+        const letterModal = document.getElementById('letter-modal');
+        const envelope = document.getElementById('envelope');
+        const envelopeClosedContent = document.getElementById('envelope-closed-content');
+        const letterContent = document.getElementById('letter-content');
+        const btnCloseLetter = document.getElementById('btn-close-letter');
+        const btnSoundToggle = document.getElementById('btn-sound-toggle');
+        const soundIcon = document.getElementById('sound-icon');
+
+        const toolBtns = {
+            plant: document.getElementById('tool-plant'),
+            water: document.getElementById('tool-water'),
+            fertilize: document.getElementById('tool-fertilize')
+        };
+
+        // --- INTRO SCREEN JOKE BUTTON LOGIC ---
+        let yesScale = 1;
+        let noScale = 1;
+        const noPhrases = [
+            "¿Segura?",
+            "¡Piénsalo bien!",
+            "¡No hay otra opción!",
+            "¡Mira qué bonito el SÍ!",
+            "¡Haz clic en Sí!",
+            "¡Porfaaa!"
+        ];
+        let phraseIdx = 0;
+
+        btnNo.addEventListener('click', () => {
+            playSound('water');
+            yesScale += 0.3;
+            noScale = Math.max(0.4, noScale - 0.1);
+            
+            btnYes.style.transform = `scale(${yesScale})`;
+            btnNo.style.transform = `scale(${noScale})`;
+            btnNo.innerText = noPhrases[phraseIdx % noPhrases.length];
+            phraseIdx++;
+        });
+
+        btnYes.addEventListener('click', () => {
+            playSound('fanfare');
+            introScreen.classList.add('transition-opacity', 'duration-500', 'opacity-0');
+            setTimeout(() => {
+                introScreen.classList.add('hidden');
+            }, 500);
+        });
+
+        btnSoundToggle.addEventListener('click', () => {
+            soundEnabled = !soundEnabled;
+            soundIcon.innerText = soundEnabled ? '🔊' : '🔇';
+        });
+
+        // Tool Selection
+        Object.keys(toolBtns).forEach(tool => {
+            toolBtns[tool].addEventListener('click', () => {
+                if (cooldowns[tool].active) return;
+
+                if (selectedTool === tool) {
+                    selectedTool = null;
+                    toolBtns[tool].classList.remove('active-tool', 'ring-4', 'ring-amber-400');
+                } else {
+                    Object.values(toolBtns).forEach(b => b.classList.remove('active-tool', 'ring-4', 'ring-amber-400'));
+                    selectedTool = tool;
+                    toolBtns[tool].classList.add('active-tool', 'ring-4', 'ring-amber-400');
+                    playSound('plant');
+                }
+            });
+        });
+
+        // --- REALISTIC SVG RENDERER FOR TULIP STAGES ---
+        function renderTulipSVG(stage) {
+            if (stage === 0) {
+                // Natural Soil Dig Plot Spot
+                return `
+                <svg viewBox="0 0 100 120" class="w-full h-full opacity-60 hover:opacity-100 transition-opacity">
+                    <ellipse cx="50" cy="95" rx="28" ry="10" fill="#2D1B18" stroke="#5D4037" stroke-width="2" stroke-dasharray="3,3" />
+                    <text x="50" y="98" font-size="14" text-anchor="middle" fill="#8D6E63">🤎</text>
+                </svg>`;
+            }
+
+            if (stage === 1) {
+                return `
+                <svg viewBox="0 0 100 120" class="w-full h-full fade-step">
+                    <ellipse cx="50" cy="95" rx="28" ry="10" fill="#2D1B18" />
+                    <path d="M45 92 Q42 105 38 112 M50 95 Q50 108 52 115 M55 92 Q60 104 62 110" stroke="#D7CCC8" stroke-width="1.5" fill="none" />
+                    <path d="M50 65 Q68 80 50 95 Q32 80 50 65 Z" fill="#8D6E63" stroke="#5D4037" stroke-width="2" />
+                    <path d="M50 65 Q48 58 52 52 Q54 58 50 65 Z" fill="#81C784" />
+                </svg>`;
+            }
+
+            if (stage === 2) {
+                return `
+                <svg viewBox="0 0 100 120" class="w-full h-full fade-step">
+                    <ellipse cx="50" cy="95" rx="26" ry="9" fill="#2D1B18" />
+                    <path d="M50 90 Q35 70 42 45 Q48 68 50 90 Z" fill="#66BB6A" />
+                    <path d="M50 90 Q65 68 58 40 Q52 65 50 90 Z" fill="#81C784" />
+                </svg>`;
+            }
+
+            if (stage === 3) {
+                return `
+                <svg viewBox="0 0 100 120" class="w-full h-full fade-step">
+                    <ellipse cx="50" cy="95" rx="24" ry="8" fill="#2D1B18" />
+                    <path d="M50 90 Q49 50 50 28" stroke="#4CAF50" stroke-width="5" stroke-linecap="round" fill="none" />
+                    <path d="M50 85 Q22 60 30 30 Q44 55 50 70 Z" fill="#4CAF50" />
+                    <path d="M50 85 Q78 58 70 25 Q56 52 50 70 Z" fill="#66BB6A" />
+                </svg>`;
+            }
+
+            if (stage === 4) {
+                return `
+                <svg viewBox="0 0 100 120" class="w-full h-full fade-step">
+                    <ellipse cx="50" cy="95" rx="24" ry="8" fill="#2D1B18" />
+                    <path d="M50 90 Q51 45 50 20" stroke="#4CAF50" stroke-width="5" stroke-linecap="round" fill="none" />
+                    <path d="M50 85 Q20 60 32 30 Q44 55 50 70 Z" fill="#4CAF50" />
+                    <path d="M50 85 Q80 58 68 25 Q56 52 50 70 Z" fill="#66BB6A" />
+                    <path d="M50 22 Q38 12 50 2 Q62 12 50 22 Z" fill="#FBC02D" stroke="#F57F17" stroke-width="1.5" />
+                </svg>`;
+            }
+
+            if (stage === 5) {
+                return `
+                <svg viewBox="0 0 100 120" class="w-full h-full fade-step filter drop-shadow(0 4px 6px rgba(251,192,45,0.5))">
+                    <ellipse cx="50" cy="95" rx="24" ry="8" fill="#2D1B18" />
+                    <path d="M50 90 Q49 50 50 24" stroke="#4CAF50" stroke-width="5.5" stroke-linecap="round" fill="none" />
+                    <path d="M50 85 Q18 55 28 25 Q42 52 50 70 Z" fill="#43A047" />
+                    <path d="M50 85 Q82 55 72 22 Q58 52 50 70 Z" fill="#66BB6A" />
+                    
+                    <path d="M50 28 C32 20 28 2 42 -2 C48 8 50 20 50 28 Z" fill="#FDD835" />
+                    <path d="M50 28 C68 20 72 2 58 -2 C52 8 50 20 50 28 Z" fill="#FDD835" />
+                    <path d="M50 30 C36 14 38 -6 50 -10 C62 -6 64 14 50 30 Z" fill="#FBC02D" stroke="#F57F17" stroke-width="1" />
+                    <path d="M50 25 Q44 10 50 0 Q56 10 50 25 Z" fill="#FFF59D" opacity="0.85" />
+                </svg>`;
+            }
+        }
+
+        // Particle Feedback
+        function createParticles(x, y, colorEmoji) {
+            for (let i = 0; i < 6; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle text-sm';
+                particle.innerText = colorEmoji;
+                particle.style.left = `${x}px`;
+                particle.style.top = `${y}px`;
+
+                const dx = (Math.random() - 0.5) * 80;
+                const dy = (Math.random() - 0.8) * 80;
+                particle.style.setProperty('--dx', `${dx}px`);
+                particle.style.setProperty('--dy', `${dy}px`);
+
+                document.body.appendChild(particle);
+                setTimeout(() => particle.remove(), 1000);
+            }
+        }
+
+        // --- RENDER ORGANIC GARDEN FIELD ---
+        function renderGarden() {
+            gardenSpotsContainer.innerHTML = '';
+
+            gardenState.forEach((item) => {
+                const spot = document.createElement('div');
+                spot.className = 'absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-transform active:scale-95 hover:scale-105';
+                spot.style.left = `${item.x}%`;
+                spot.style.top = `${item.y}%`;
+                spot.style.width = '55px';
+                spot.style.height = '65px';
+                spot.dataset.id = item.id;
+
+                let statusBadge = '';
+                if (item.needs === 'water') {
+                    statusBadge = '<span class="absolute -top-1 -right-1 text-xs bg-blue-500 text-white rounded-full p-0.5 shadow z-20 animate-bounce">💧</span>';
+                } else if (item.needs === 'fertilize') {
+                    statusBadge = '<span class="absolute -top-1 -right-1 text-xs bg-emerald-500 text-white rounded-full p-0.5 shadow z-20 animate-bounce">✨</span>';
+                }
+
+                spot.innerHTML = `
+                    ${statusBadge}
+                    <div class="w-full h-full flex items-center justify-center">
+                        ${renderTulipSVG(item.stage)}
+                    </div>
+                `;
+
+                spot.addEventListener('click', (e) => handlePlotClick(item, e));
+                gardenSpotsContainer.appendChild(spot);
+            });
+
+            updateProgress();
+        }
+
+        // Handle Plot Action with 3-Second Cooldown Verification
+        function handlePlotClick(item, event) {
+            const rect = event.currentTarget.getBoundingClientRect();
+            const clickX = rect.left + rect.width / 2;
+            const clickY = rect.top + rect.height / 2;
+
+            if (!selectedTool) {
+                if (item.stage === 0) {
+                    alert('Selecciona la herramienta "Sembrar" 🌰 abajo para plantar un tulipán.');
+                } else if (item.needs === 'water') {
+                    alert('¡Esta plantita necesita agua! Selecciona "Regar" 💧.');
+                } else if (item.needs === 'fertilize') {
+                    alert('¡Echa abono ✨ para ayudarla a florecer totalmente!');
+                }
+                return;
+            }
+
+            if (cooldowns[selectedTool].active) {
+                return; // Block interaction during 3s cooldown
+            }
+
+            let actionSuccess = false;
+
+            // TOOL: Plant
+            if (selectedTool === 'plant' && item.stage === 0) {
+                item.stage = 1;
+                item.needs = 'water';
+                playSound('plant');
+                createParticles(clickX, clickY, '🌱');
+                actionSuccess = true;
+            }
+            // TOOL: Water
+            else if (selectedTool === 'water' && item.needs === 'water') {
+                if (item.stage === 1) item.stage = 2;
+                else if (item.stage === 3) item.stage = 4;
+                item.needs = 'fertilize';
+                playSound('water');
+                createParticles(clickX, clickY, '💧');
+                actionSuccess = true;
+            }
+            // TOOL: Fertilize
+            else if (selectedTool === 'fertilize' && item.needs === 'fertilize') {
+                if (item.stage === 2) {
+                    item.stage = 3;
+                    item.needs = 'water';
+                } else if (item.stage === 4) {
+                    item.stage = 5; // Fully bloomed!
+                    item.needs = 'none';
+                }
+                playSound('fertilize');
+                createParticles(clickX, clickY, '✨');
+                actionSuccess = true;
+            }
+
+            if (actionSuccess) {
+                triggerToolCooldown(selectedTool);
+                renderGarden();
+            }
+        }
+
+        // Progress Tracking
+        function updateProgress() {
+            const bloomedCount = gardenState.filter(item => item.stage === 5).length;
+            progressText.innerText = `${bloomedCount} / ${TOTAL_TULIPS} Florecidos`;
+            
+            const pct = (bloomedCount / TOTAL_TULIPS) * 100;
+            progressBar.style.width = `${pct}%`;
+
+            if (bloomedCount === TOTAL_TULIPS) {
+                setTimeout(triggerWinCelebration, 600);
+            }
+        }
+
+        // Celebration Envelope
+        function triggerWinCelebration() {
+            playSound('fanfare');
+            startFallingPetals();
+
+            letterModal.classList.remove('hidden');
+            setTimeout(() => {
+                letterModal.classList.remove('opacity-0');
+            }, 50);
+        }
+
+        envelope.addEventListener('click', () => {
+            playSound('fertilize');
+            envelopeClosedContent.classList.add('hidden');
+            letterContent.classList.remove('hidden');
+        });
+
+        btnCloseLetter.addEventListener('click', (e) => {
+            e.stopPropagation();
+            letterModal.classList.add('opacity-0');
+            setTimeout(() => {
+                letterModal.classList.add('hidden');
+            }, 500);
+        });
+
+        function startFallingPetals() {
+            const petals = ['🌸', '💛', '🌻', '🌷'];
+            for (let i = 0; i < 25; i++) {
+                setTimeout(() => {
+                    const petal = document.createElement('div');
+                    petal.className = 'falling-petal text-xl';
+                    petal.innerText = petals[Math.floor(Math.random() * petals.length)];
+                    petal.style.left = `${Math.random() * 100}vw`;
+                    petal.style.animationDuration = `${5 + Math.random() * 5}s`;
+                    document.body.appendChild(petal);
+                }, i * 250);
+            }
+        }
+
+        // Initial Load
+        window.addEventListener('load', () => {
+            renderGarden();
+        });
+    </script>
+</body>
+</html>
